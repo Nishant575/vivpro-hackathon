@@ -31,6 +31,13 @@ def format_result(hit):
     if not primary_sponsor and sponsors:
         primary_sponsor = sponsors[0].get("name")
 
+    # Extract ALL unique countries (for filters)
+    all_countries = list(dict.fromkeys(
+        f.get("country")
+        for f in source.get("facilities", [])
+        if f.get("country")
+    ))
+
     # Extract locations (limit to 3)
     locations = []
     for f in source.get("facilities", [])[:3]:
@@ -48,6 +55,7 @@ def format_result(hit):
         "sponsor": primary_sponsor,
         "enrollment": source.get("enrollment"),
         "locations": locations,
+        "countries": all_countries,
         "start_date": source.get("start_date"),
         "score": hit.get("_score"),
         "highlights": hit.get("highlight", {})
@@ -114,13 +122,6 @@ def search(query):
     
 @search_bp.route('/summarize', methods=['POST'])
 def summarize():
-    """
-    Generate AI summary of search results using GPT-4o-mini.
-    Called asynchronously after search results load.
-
-    POST /api/summarize
-    Body: { query, total, entities, results (condensed) }
-    """
     data = request.get_json()
     if not data:
         return jsonify({"success": False, "summary": ""}), 400
@@ -130,7 +131,6 @@ def summarize():
     entities = data.get("entities", {})
     results = data.get("results", [])
 
-    # Condense results for the prompt (keep it small for speed)
     condensed = []
     for r in results[:20]:
         condensed.append({
@@ -167,7 +167,27 @@ def summarize():
     top_sponsors = sorted(sponsor_counts.items(), key=lambda x: -x[1])[:5]
     top_countries = sorted(countries.items(), key=lambda x: -x[1])[:5]
 
-    prompt = f"""You are a clinical trials research assistant. Summarize these search results in 2-3 concise sentences.
+    query_type = entities.get("query_type", "search")
+
+    if query_type == "question":
+        prompt = f"""You are a clinical trials research assistant. The user asked a QUESTION about clinical trials data. Answer it directly and specifically.
+
+User's question: "{query}"
+Entities extracted: {entities}
+Total matching trials: {total}
+
+Status breakdown: {status_counts}
+Phase breakdown: {phase_counts}
+Top sponsors: {top_sponsors}
+Top locations: {top_countries}
+
+Sample trials:
+{condensed[:5]}
+
+Answer the user's question directly in 2-4 sentences. Be specific with numbers and percentages. If the question asks "how many", give the exact count. If it asks "which countries", list them. Do NOT just summarize — answer the question."""
+
+    else:
+        prompt = f"""You are a clinical trials research assistant. Summarize these search results in 2-3 concise sentences.
 
 User searched: "{query}"
 Entities extracted: {entities}
@@ -183,7 +203,7 @@ Sample trials:
 {condensed[:5]}
 
 Write a brief, informative summary. Mention the most notable patterns — recruitment status, phase distribution, key sponsors, geographic spread. Be specific with numbers. Do NOT use bullet points or markdown."""
-
+   
     try:
         from openai import OpenAI
         from dotenv import load_dotenv

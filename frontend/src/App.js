@@ -51,15 +51,9 @@ function App() {
       if (trial.phase) {
         phaseCounts[trial.phase] = (phaseCounts[trial.phase] || 0) + 1;
       }
-      if (trial.locations && trial.locations.length > 0) {
-        const seen = new Set();
-        trial.locations.forEach((loc) => {
-          const parts = loc.split(', ');
-          const country = parts[parts.length - 1];
-          if (country && !seen.has(country)) {
-            seen.add(country);
-            countryCounts[country] = (countryCounts[country] || 0) + 1;
-          }
+      if (trial.countries && trial.countries.length > 0) {
+        trial.countries.forEach((country) => {
+          countryCounts[country] = (countryCounts[country] || 0) + 1;
         });
       }
     });
@@ -86,10 +80,7 @@ function App() {
       if (filters.phases.length > 0 && !filters.phases.includes(trial.phase))
         return false;
       if (filters.countries.length > 0) {
-        const trialCountries = (trial.locations || []).map((loc) => {
-          const parts = loc.split(', ');
-          return parts[parts.length - 1];
-        });
+        const trialCountries = trial.countries || [];
         if (!filters.countries.some((c) => trialCountries.includes(c)))
           return false;
       }
@@ -266,6 +257,9 @@ function App() {
   const displayEntities = Object.entries(entities).filter(
     ([key]) => !key.endsWith('_confidence')
   );
+
+  
+  const isQuestion = entities.query_type === "question";
 
   // --- Displayed results (show 5 or all) ---
   const displayedResults = showAll
@@ -534,6 +528,8 @@ function App() {
                       if (
                               key === 'condition_synonyms' ||
                               key === 'condition_match_type' ||
+                              key === 'query_type' ||
+                              key.endsWith('_op') ||
                               key.endsWith('_confidence')
                             )
                               return null;
@@ -580,10 +576,10 @@ function App() {
 
             {/* AI Summary */}
              {(summaryLoading || aiSummary) && (
-              <div className="ai-summary">
+              <div className={`ai-summary ${isQuestion ? 'ai-answer' : ''}`}>
                 <div className="ai-summary-header">
-                  <span className="ai-summary-icon">✨</span>
-                  <span className="ai-summary-label">AI Summary</span>
+                  <span className="ai-summary-icon">{isQuestion ? '💡' : '✨'}</span>
+                  <span className="ai-summary-label">{isQuestion ? 'Answer' : 'AI Summary'}</span>
                 </div>
                 {summaryLoading ? (
                   <div className="ai-summary-shimmer">
@@ -598,7 +594,7 @@ function App() {
 
             {/* Results Header */}
             <div className="results-list-header">
-              <h2 className="results-list-title">Top Results</h2>
+             <h2 className="results-list-title">{isQuestion ? 'Supporting Trials' : 'Top Results'}</h2>
               <span className="results-list-count">
                 {total} total
                 {activeFilterCount > 0 && (

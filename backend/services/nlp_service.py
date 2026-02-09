@@ -87,6 +87,15 @@ Extract these entities if mentioned, using EXACTLY the allowed values:
    
    Note: phase and status are ALWAYS OR (a trial can't be two phases simultaneously)
 
+11. **query_type** (ALWAYS include this field):
+   - "search" → user wants to see trial listings (default)
+   - "question" → user is asking an analytical question about trials
+   
+   Signals for "question":
+   - Starts with: "how many", "which", "what", "are there", "is there", "do any"
+   - Contains: "count", "list all", "tell me about", "compare"
+   - Asking for aggregation, not individual results
+
 
 RULES:
 1. Extract ALL mentioned entities - medical conditions, drugs, phases, statuses, locations, etc.
@@ -149,6 +158,21 @@ Output: {"condition": ["diabetes", "Hypertension"], "condition_op": "AND"}
 
 Query: "show me chemo and radiation trials for breast cancer together"
 Output: {"condition": "breast cancer", "intervention": ["Chemotherapy", "Radiotherapy"], "intervention_op": "AND"}
+
+Query: "how many lung cancer trials are there?"
+Output: {"condition": "lung cancer", "query_type": "question"}
+
+Query: "which countries have completed lung cancer trials?"
+Output: {"condition": "lung cancer", "status": "COMPLETED", "query_type": "question"}
+
+Query: "what phase are most diabetes trials in?"
+Output: {"condition": "diabetes", "query_type": "question"}
+
+Query: "show me lung cancer trials"
+Output: {"condition": "lung cancer", "query_type": "search"}
+
+Query: "are there any recruiting phase 3 breast cancer trials?"
+Output: {"condition": "breast cancer", "phase": "PHASE3", "status": "RECRUITING", "query_type": "question"}
 """
 
 
@@ -272,6 +296,9 @@ def extract_entities(query):
         if key in raw_entities:
             raw_entities[key] = ensure_list(raw_entities[key])
 
+    # Default query_type to "search"
+    if "query_type" not in raw_entities:
+        raw_entities["query_type"] = "search"
 
         # MeSH synonym lookup for each condition
         try:
