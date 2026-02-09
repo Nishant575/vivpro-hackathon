@@ -1,0 +1,34 @@
+# Core Flask
+flask==3.0.0
+flask-cors==4.0.0
+python-dotenv==1.0.0
+
+# MongoDB
+pymongo==4.6.1
+
+# Elasticsearch
+elasticsearch==9.3.0
+
+# PDF Processing
+PyPDF2==3.0.1
+pdfplumber==0.11.0
+
+# OpenAI (for embeddings + LLM)
+openai==1.12.0
+
+# Data Processing
+pandas==2.2.0
+numpy==1.26.4
+
+# Vector Store (for RAG)
+chromadb==0.4.24
+
+# LangChain (optional but useful for RAG)
+langchain==0.1.9
+langchain-community==0.0.24
+langchain-openai==0.0.6
+
+# Utilities
+requests==2.31.0
+tiktoken==0.6.0
+

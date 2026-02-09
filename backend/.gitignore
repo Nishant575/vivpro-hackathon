@@ -1,0 +1,16 @@
+
+
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+.env/
+instance/
+.pytest_cache/
+.webassets-cache
+.DS_Store
+.vscode/
+.idea/
+*.swp

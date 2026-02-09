@@ -1,0 +1,40 @@
+# === Environment & Secrets ===
+.env
+.env.local
+.env.*.local
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+
+# === Python Virtual Environments ===
+venv/
+.venv/
+
+# === Large Data Files (regenerable) ===
+backend/data/embeddings_cache.json
+backend/data/mesh_synonyms.json
+backend/data/mesh_terms_list.json
+backend/data/desc2026.xml
+
+# === Node / React ===
+node_modules/
+build/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === OS ===
+.DS_Store
+Thumbs.db
